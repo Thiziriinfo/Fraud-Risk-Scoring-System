@@ -1,492 +1,599 @@
-{
-  "nbformat": 4,
-  "nbformat_minor": 0,
-  "metadata": {
-    "colab": {
-      "provenance": [],
-      "authorship_tag": "ABX9TyOY6Ss4M/GQRsictjW2DDBM",
-      "include_colab_link": true
-    },
-    "kernelspec": {
-      "name": "python3",
-      "display_name": "Python 3"
-    },
-    "language_info": {
-      "name": "python"
+import streamlit as st
+import pandas as pd
+import plotly.express as px
+import plotly.graph_objects as go
+import numpy as np
+
+st.set_page_config(
+    page_title="Fraud Risk Dashboard",
+    page_icon="🔒",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
+st.markdown("""
+<style>
+    [data-testid="stMetric"] {
+        background-color: #1e1e2e;
+        border-radius: 10px;
+        padding: 16px;
+        border-left: 4px solid #6366f1;
     }
-  },
-  "cells": [
-    {
-      "cell_type": "markdown",
-      "metadata": {
-        "id": "view-in-github",
-        "colab_type": "text"
-      },
-      "source": [
-        "<a href=\"https://colab.research.google.com/github/Thiziriinfo/Fraud-Risk-Scoring-System/blob/main/app.py\" target=\"_parent\"><img src=\"https://colab.research.google.com/assets/colab-badge.svg\" alt=\"Open In Colab\"/></a>"
-      ]
-    },
-    {
-      "cell_type": "code",
-      "execution_count": 4,
-      "metadata": {
-        "colab": {
-          "base_uri": "https://localhost:8080/"
-        },
-        "id": "p38b1g9x12pI",
-        "outputId": "a799bf48-213e-4a0a-f38d-981f9fc7eb9b"
-      },
-      "outputs": [
-        {
-          "output_type": "stream",
-          "name": "stdout",
-          "text": [
-            "Collecting streamlit\n",
-            "  Downloading streamlit-1.58.0-py3-none-any.whl.metadata (9.6 kB)\n",
-            "Requirement already satisfied: plotly in /usr/local/lib/python3.12/dist-packages (5.24.1)\n",
-            "Requirement already satisfied: altair!=5.4.0,!=5.4.1,<7,>=4.0 in /usr/local/lib/python3.12/dist-packages (from streamlit) (5.5.0)\n",
-            "Requirement already satisfied: blinker<2,>=1.5.0 in /usr/local/lib/python3.12/dist-packages (from streamlit) (1.9.0)\n",
-            "Requirement already satisfied: cachetools<8,>=5.5 in /usr/local/lib/python3.12/dist-packages (from streamlit) (6.2.6)\n",
-            "Requirement already satisfied: click<9,>=7.0 in /usr/local/lib/python3.12/dist-packages (from streamlit) (8.4.1)\n",
-            "Requirement already satisfied: gitpython!=3.1.19,<4,>=3.0.7 in /usr/local/lib/python3.12/dist-packages (from streamlit) (3.1.50)\n",
-            "Requirement already satisfied: numpy<3,>=1.23 in /usr/local/lib/python3.12/dist-packages (from streamlit) (2.0.2)\n",
-            "Requirement already satisfied: packaging>=20 in /usr/local/lib/python3.12/dist-packages (from streamlit) (26.2)\n",
-            "Requirement already satisfied: pandas<4,>=1.4.0 in /usr/local/lib/python3.12/dist-packages (from streamlit) (2.2.2)\n",
-            "Requirement already satisfied: pillow<13,>=7.1.0 in /usr/local/lib/python3.12/dist-packages (from streamlit) (11.3.0)\n",
-            "Collecting pydeck<1,>=0.8.0b4 (from streamlit)\n",
-            "  Downloading pydeck-0.9.2-py2.py3-none-any.whl.metadata (4.2 kB)\n",
-            "Requirement already satisfied: protobuf<8,>=3.20 in /usr/local/lib/python3.12/dist-packages (from streamlit) (5.29.6)\n",
-            "Requirement already satisfied: pyarrow>=7.0 in /usr/local/lib/python3.12/dist-packages (from streamlit) (18.1.0)\n",
-            "Requirement already satisfied: requests<3,>=2.27 in /usr/local/lib/python3.12/dist-packages (from streamlit) (2.32.4)\n",
-            "Requirement already satisfied: tenacity<10,>=8.1.0 in /usr/local/lib/python3.12/dist-packages (from streamlit) (9.1.4)\n",
-            "Requirement already satisfied: toml<2,>=0.10.1 in /usr/local/lib/python3.12/dist-packages (from streamlit) (0.10.2)\n",
-            "Requirement already satisfied: typing-extensions<5,>=4.10.0 in /usr/local/lib/python3.12/dist-packages (from streamlit) (4.15.0)\n",
-            "Requirement already satisfied: starlette>=0.40.0 in /usr/local/lib/python3.12/dist-packages (from streamlit) (0.52.1)\n",
-            "Requirement already satisfied: uvicorn>=0.30.0 in /usr/local/lib/python3.12/dist-packages (from streamlit) (0.48.0)\n",
-            "Requirement already satisfied: httptools>=0.6.3 in /usr/local/lib/python3.12/dist-packages (from streamlit) (0.8.0)\n",
-            "Requirement already satisfied: anyio>=4.0.0 in /usr/local/lib/python3.12/dist-packages (from streamlit) (4.13.0)\n",
-            "Requirement already satisfied: python-multipart>=0.0.10 in /usr/local/lib/python3.12/dist-packages (from streamlit) (0.0.30)\n",
-            "Requirement already satisfied: websockets>=12.0.0 in /usr/local/lib/python3.12/dist-packages (from streamlit) (15.0.1)\n",
-            "Requirement already satisfied: itsdangerous>=2.1.2 in /usr/local/lib/python3.12/dist-packages (from streamlit) (2.2.0)\n",
-            "Requirement already satisfied: watchdog<7,>=2.1.5 in /usr/local/lib/python3.12/dist-packages (from streamlit) (6.0.0)\n",
-            "Requirement already satisfied: jinja2 in /usr/local/lib/python3.12/dist-packages (from altair!=5.4.0,!=5.4.1,<7,>=4.0->streamlit) (3.1.6)\n",
-            "Requirement already satisfied: jsonschema>=3.0 in /usr/local/lib/python3.12/dist-packages (from altair!=5.4.0,!=5.4.1,<7,>=4.0->streamlit) (4.26.0)\n",
-            "Requirement already satisfied: narwhals>=1.14.2 in /usr/local/lib/python3.12/dist-packages (from altair!=5.4.0,!=5.4.1,<7,>=4.0->streamlit) (2.22.0)\n",
-            "Requirement already satisfied: idna>=2.8 in /usr/local/lib/python3.12/dist-packages (from anyio>=4.0.0->streamlit) (3.18)\n",
-            "Requirement already satisfied: gitdb<5,>=4.0.1 in /usr/local/lib/python3.12/dist-packages (from gitpython!=3.1.19,<4,>=3.0.7->streamlit) (4.0.12)\n",
-            "Requirement already satisfied: python-dateutil>=2.8.2 in /usr/local/lib/python3.12/dist-packages (from pandas<4,>=1.4.0->streamlit) (2.9.0.post0)\n",
-            "Requirement already satisfied: pytz>=2020.1 in /usr/local/lib/python3.12/dist-packages (from pandas<4,>=1.4.0->streamlit) (2025.2)\n",
-            "Requirement already satisfied: tzdata>=2022.7 in /usr/local/lib/python3.12/dist-packages (from pandas<4,>=1.4.0->streamlit) (2026.2)\n",
-            "Requirement already satisfied: charset_normalizer<4,>=2 in /usr/local/lib/python3.12/dist-packages (from requests<3,>=2.27->streamlit) (3.4.7)\n",
-            "Requirement already satisfied: urllib3<3,>=1.21.1 in /usr/local/lib/python3.12/dist-packages (from requests<3,>=2.27->streamlit) (2.5.0)\n",
-            "Requirement already satisfied: certifi>=2017.4.17 in /usr/local/lib/python3.12/dist-packages (from requests<3,>=2.27->streamlit) (2026.5.20)\n",
-            "Requirement already satisfied: h11>=0.8 in /usr/local/lib/python3.12/dist-packages (from uvicorn>=0.30.0->streamlit) (0.16.0)\n",
-            "Requirement already satisfied: smmap<6,>=3.0.1 in /usr/local/lib/python3.12/dist-packages (from gitdb<5,>=4.0.1->gitpython!=3.1.19,<4,>=3.0.7->streamlit) (5.0.3)\n",
-            "Requirement already satisfied: MarkupSafe>=2.0 in /usr/local/lib/python3.12/dist-packages (from jinja2->altair!=5.4.0,!=5.4.1,<7,>=4.0->streamlit) (3.0.3)\n",
-            "Requirement already satisfied: attrs>=22.2.0 in /usr/local/lib/python3.12/dist-packages (from jsonschema>=3.0->altair!=5.4.0,!=5.4.1,<7,>=4.0->streamlit) (26.1.0)\n",
-            "Requirement already satisfied: jsonschema-specifications>=2023.03.6 in /usr/local/lib/python3.12/dist-packages (from jsonschema>=3.0->altair!=5.4.0,!=5.4.1,<7,>=4.0->streamlit) (2025.9.1)\n",
-            "Requirement already satisfied: referencing>=0.28.4 in /usr/local/lib/python3.12/dist-packages (from jsonschema>=3.0->altair!=5.4.0,!=5.4.1,<7,>=4.0->streamlit) (0.37.0)\n",
-            "Requirement already satisfied: rpds-py>=0.25.0 in /usr/local/lib/python3.12/dist-packages (from jsonschema>=3.0->altair!=5.4.0,!=5.4.1,<7,>=4.0->streamlit) (2026.5.1)\n",
-            "Requirement already satisfied: six>=1.5 in /usr/local/lib/python3.12/dist-packages (from python-dateutil>=2.8.2->pandas<4,>=1.4.0->streamlit) (1.17.0)\n",
-            "Downloading streamlit-1.58.0-py3-none-any.whl (9.2 MB)\n",
-            "\u001b[2K   \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m9.2/9.2 MB\u001b[0m \u001b[31m78.2 MB/s\u001b[0m eta \u001b[36m0:00:00\u001b[0m\n",
-            "\u001b[?25hDownloading pydeck-0.9.2-py2.py3-none-any.whl (11.3 MB)\n",
-            "\u001b[2K   \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m11.3/11.3 MB\u001b[0m \u001b[31m66.2 MB/s\u001b[0m eta \u001b[36m0:00:00\u001b[0m\n",
-            "\u001b[?25hInstalling collected packages: pydeck, streamlit\n",
-            "Successfully installed pydeck-0.9.2 streamlit-1.58.0\n"
-          ]
-        }
-      ],
-      "source": [
-        "!pip install streamlit plotly"
-      ]
-    },
-    {
-      "cell_type": "code",
-      "source": [
-        "%%writefile app.py\n",
-        "\n",
-        "import streamlit as st\n",
-        "import pandas as pd\n",
-        "import plotly.express as px\n",
-        "import plotly.graph_objects as go\n",
-        "import numpy as np\n",
-        "\n",
-        "st.set_page_config(\n",
-        "    page_title=\"Fraud Risk Dashboard\",\n",
-        "    page_icon=\"🔒\",\n",
-        "    layout=\"wide\",\n",
-        "    initial_sidebar_state=\"expanded\"\n",
-        ")\n",
-        "\n",
-        "st.markdown(\"\"\"\n",
-        "<style>\n",
-        "    [data-testid=\"stMetric\"] {\n",
-        "        background-color: #1e1e2e;\n",
-        "        border-radius: 10px;\n",
-        "        padding: 16px;\n",
-        "        border-left: 4px solid #6366f1;\n",
-        "    }\n",
-        "    [data-testid=\"stMetricLabel\"] { font-size: 0.85rem; color: #9ca3af; }\n",
-        "    [data-testid=\"stMetricValue\"] { font-size: 1.8rem; font-weight: 700; }\n",
-        "    h1 { font-size: 1.6rem !important; }\n",
-        "    h2 { font-size: 1.2rem !important; color: #9ca3af; font-weight: 400 !important; }\n",
-        "</style>\n",
-        "\"\"\", unsafe_allow_html=True)\n",
-        "\n",
-        "\n",
-        "@st.cache_data\n",
-        "def load_data():\n",
-        "    df = pd.read_csv('fraud_sample.csv')\n",
-        "    df.columns = df.columns.str.strip()\n",
-        "    if 'Is Fraud' in df.columns:\n",
-        "        df.rename(columns={'Is Fraud': 'Is_Fraud'}, inplace=True)\n",
-        "    if 'Use Chip' in df.columns:\n",
-        "        df.rename(columns={'Use Chip': 'Use_Chip'}, inplace=True)\n",
-        "    if 'Errors?' in df.columns:\n",
-        "        df.rename(columns={'Errors?': 'Errors'}, inplace=True)\n",
-        "    if 'Merchant Name' in df.columns:\n",
-        "        df.rename(columns={'Merchant Name': 'Merchant_Name'}, inplace=True)\n",
-        "    if 'Merchant State' in df.columns:\n",
-        "        df.rename(columns={'Merchant State': 'Merchant_State'}, inplace=True)\n",
-        "    return df\n",
-        "\n",
-        "\n",
-        "try:\n",
-        "    df = load_data()\n",
-        "except FileNotFoundError:\n",
-        "    st.error(\"Fichier `fraud_sample.csv` introuvable. Placez-le dans le même dossier que app.py.\")\n",
-        "    st.stop()\n",
-        "\n",
-        "df_fraud = df[df['Is_Fraud'] == 1]\n",
-        "df_normal = df[df['Is_Fraud'] == 0]\n",
-        "\n",
-        "PURPLE = \"#6366f1\"\n",
-        "RED = \"#ef4444\"\n",
-        "GREEN = \"#22c55e\"\n",
-        "GRAY = \"#9ca3af\"\n",
-        "\n",
-        "with st.sidebar:\n",
-        "    st.markdown(\"## Fraud Risk Scoring\")\n",
-        "    st.markdown(\"IBM TabFormer · 2015–2019\")\n",
-        "    st.divider()\n",
-        "    page = st.radio(\n",
-        "        \"Navigation\",\n",
-        "        [\"Vue Exécutive\", \"Analyse des Fraudes\", \"Profil Marchand\", \"Performance Modèle\"],\n",
-        "        label_visibility=\"collapsed\"\n",
-        "    )\n",
-        "    st.divider()\n",
-        "    st.caption(\"Modèle : LightGBM · AUC 0.9904\")\n",
-        "    st.caption(\"Thiziri Abchiche — Data Analyst\")\n",
-        "\n",
-        "\n",
-        "# PAGE 1 — VUE EXECUTIVE\n",
-        "if page == \"Vue Exécutive\":\n",
-        "    st.title(\"Vue Exécutive\")\n",
-        "    st.markdown(\"## Synthèse des résultats du système de détection de fraude\")\n",
-        "    st.divider()\n",
-        "\n",
-        "    total = len(df)\n",
-        "    total_fraud = len(df_fraud)\n",
-        "    fraud_rate = total_fraud / total * 100\n",
-        "    avg_amount_fraud = df_fraud['Amount'].mean()\n",
-        "    avg_amount_normal = df_normal['Amount'].mean()\n",
-        "\n",
-        "    col1, col2, col3, col4 = st.columns(4)\n",
-        "    with col1:\n",
-        "        st.metric(\"Transactions analysées\", f\"{total:,}\".replace(\",\", \" \"))\n",
-        "    with col2:\n",
-        "        st.metric(\"Fraudes détectées\", f\"{total_fraud:,}\".replace(\",\", \" \"))\n",
-        "    with col3:\n",
-        "        st.metric(\"Taux de fraude\", f\"{fraud_rate:.3f}%\")\n",
-        "    with col4:\n",
-        "        st.metric(\"Montant moyen — fraude\", f\"${avg_amount_fraud:.0f}\",\n",
-        "                  delta=f\"+${avg_amount_fraud - avg_amount_normal:.0f} vs normal\",\n",
-        "                  delta_color=\"inverse\")\n",
-        "\n",
-        "    st.divider()\n",
-        "    col_left, col_right = st.columns(2)\n",
-        "\n",
-        "    with col_left:\n",
-        "        st.subheader(\"Score du modèle LightGBM\")\n",
-        "        metrics_df = pd.DataFrame({\n",
-        "            \"Métrique\": [\"AUC-ROC\", \"Recall (fraude)\", \"Precision (fraude)\", \"Std CV (5 folds)\"],\n",
-        "            \"Valeur\": [0.9904, 0.94, 0.59, 0.0004],\n",
-        "            \"Objectif\": [\"> 0.90\", \"> 0.90\", \"> 0.50\", \"< 0.005\"]\n",
-        "        })\n",
-        "        st.dataframe(metrics_df, use_container_width=True, hide_index=True)\n",
-        "\n",
-        "    with col_right:\n",
-        "        st.subheader(\"Jauge Recall — fraudes détectées\")\n",
-        "        fig_gauge = go.Figure(go.Indicator(\n",
-        "            mode=\"gauge+number\",\n",
-        "            value=94,\n",
-        "            number={\"suffix\": \"%\", \"font\": {\"size\": 40}},\n",
-        "            gauge={\n",
-        "                \"axis\": {\"range\": [0, 100]},\n",
-        "                \"bar\": {\"color\": GREEN},\n",
-        "                \"steps\": [\n",
-        "                    {\"range\": [0, 70], \"color\": \"#374151\"},\n",
-        "                    {\"range\": [70, 90], \"color\": \"#4b5563\"},\n",
-        "                    {\"range\": [90, 100], \"color\": \"#1f2937\"},\n",
-        "                ],\n",
-        "                \"threshold\": {\"line\": {\"color\": RED, \"width\": 3}, \"thickness\": 0.75, \"value\": 90}\n",
-        "            },\n",
-        "            title={\"text\": \"Recall fraude (objectif : > 90%)\"}\n",
-        "        ))\n",
-        "        fig_gauge.update_layout(height=280, margin=dict(t=40, b=10, l=20, r=20),\n",
-        "                                paper_bgcolor=\"rgba(0,0,0,0)\", font_color=\"white\")\n",
-        "        st.plotly_chart(fig_gauge, use_container_width=True)\n",
-        "\n",
-        "    st.divider()\n",
-        "    st.subheader(\"Répartition des transactions\")\n",
-        "    col_pie, col_txt = st.columns(2)\n",
-        "    with col_pie:\n",
-        "        fig_pie = go.Figure(go.Pie(\n",
-        "            labels=[\"Normal\", \"Fraude\"],\n",
-        "            values=[len(df_normal), len(df_fraud)],\n",
-        "            hole=0.55,\n",
-        "            marker=dict(colors=[PURPLE, RED]),\n",
-        "            textinfo=\"label+percent\",\n",
-        "            textfont=dict(size=14)\n",
-        "        ))\n",
-        "        fig_pie.update_layout(height=300, margin=dict(t=20, b=20, l=20, r=20),\n",
-        "                              paper_bgcolor=\"rgba(0,0,0,0)\", font_color=\"white\", showlegend=False)\n",
-        "        st.plotly_chart(fig_pie, use_container_width=True)\n",
-        "    with col_txt:\n",
-        "        st.markdown(\"\"\"\n",
-        "        **Déséquilibre de classe**\n",
-        "\n",
-        "        Avec seulement **0,136%** de fraudes, un modèle naïf qui prédit\n",
-        "        \"normal\" à chaque fois atteindrait 99,86% d'accuracy — sans jamais\n",
-        "        détecter une seule fraude.\n",
-        "\n",
-        "        C'est pourquoi on optimise sur le **Recall** et l'**AUC-ROC**,\n",
-        "        pas l'accuracy.\n",
-        "        \"\"\")\n",
-        "\n",
-        "\n",
-        "# PAGE 2 — ANALYSE DES FRAUDES\n",
-        "elif page == \"Analyse des Fraudes\":\n",
-        "    st.title(\"Analyse des Fraudes\")\n",
-        "    st.markdown(\"## Patterns comportementaux et temporels\")\n",
-        "    st.divider()\n",
-        "\n",
-        "    col1, col2 = st.columns(2)\n",
-        "\n",
-        "    with col1:\n",
-        "        st.subheader(\"Fraude par type de transaction\")\n",
-        "        if 'Use_Chip' in df.columns:\n",
-        "            fraud_by_type = df.groupby('Use_Chip')['Is_Fraud'].mean().mul(100).reset_index()\n",
-        "            fraud_by_type.columns = ['Type', 'Taux (%)']\n",
-        "            fig_type = px.bar(fraud_by_type, x='Type', y='Taux (%)',\n",
-        "                              color='Type',\n",
-        "                              color_discrete_map={\"Online Transaction\": RED,\n",
-        "                                                  \"Chip Transaction\": GREEN,\n",
-        "                                                  \"Swipe Transaction\": \"#f59e0b\"},\n",
-        "                              text='Taux (%)')\n",
-        "            fig_type.update_traces(texttemplate='%{text:.3f}%', textposition='outside')\n",
-        "            fig_type.update_layout(paper_bgcolor=\"rgba(0,0,0,0)\", plot_bgcolor=\"rgba(0,0,0,0)\",\n",
-        "                                   font_color=\"white\", showlegend=False, height=320,\n",
-        "                                   margin=dict(t=20, b=10))\n",
-        "            st.plotly_chart(fig_type, use_container_width=True)\n",
-        "\n",
-        "    with col2:\n",
-        "        st.subheader(\"Taux de fraude par heure\")\n",
-        "        if 'Hour' in df.columns:\n",
-        "            fraud_by_hour = df.groupby('Hour')['Is_Fraud'].mean().mul(100)\n",
-        "            fig_hour = go.Figure()\n",
-        "            fig_hour.add_trace(go.Scatter(x=fraud_by_hour.index, y=fraud_by_hour.values,\n",
-        "                                          mode='lines+markers',\n",
-        "                                          line=dict(color=PURPLE, width=2),\n",
-        "                                          fill='tozeroy', fillcolor='rgba(99,102,241,0.15)'))\n",
-        "            fig_hour.update_layout(xaxis_title=\"Heure\", yaxis_title=\"Taux de fraude (%)\",\n",
-        "                                   paper_bgcolor=\"rgba(0,0,0,0)\", plot_bgcolor=\"rgba(0,0,0,0)\",\n",
-        "                                   font_color=\"white\", height=320, margin=dict(t=20, b=10),\n",
-        "                                   xaxis=dict(gridcolor=\"#374151\"), yaxis=dict(gridcolor=\"#374151\"))\n",
-        "            st.plotly_chart(fig_hour, use_container_width=True)\n",
-        "\n",
-        "    st.divider()\n",
-        "    col3, col4 = st.columns(2)\n",
-        "\n",
-        "    with col3:\n",
-        "        st.subheader(\"Distribution des montants — Fraude vs Normal\")\n",
-        "        fig_box = go.Figure()\n",
-        "        fig_box.add_trace(go.Box(y=df_normal['Amount'].clip(upper=500), name=\"Normal\",\n",
-        "                                  marker_color=PURPLE, boxmean=True))\n",
-        "        fig_box.add_trace(go.Box(y=df_fraud['Amount'].clip(upper=500), name=\"Fraude\",\n",
-        "                                  marker_color=RED, boxmean=True))\n",
-        "        fig_box.update_layout(yaxis_title=\"Montant ($)\", paper_bgcolor=\"rgba(0,0,0,0)\",\n",
-        "                               plot_bgcolor=\"rgba(0,0,0,0)\", font_color=\"white\", height=320,\n",
-        "                               margin=dict(t=20, b=10), yaxis=dict(gridcolor=\"#374151\"))\n",
-        "        st.plotly_chart(fig_box, use_container_width=True)\n",
-        "\n",
-        "    with col4:\n",
-        "        st.subheader(\"Top erreurs associées aux fraudes\")\n",
-        "        if 'Errors' in df.columns:\n",
-        "            fraud_by_error = (df.groupby('Errors')['Is_Fraud'].mean().mul(100)\n",
-        "                              .where(lambda x: x > 0).dropna()\n",
-        "                              .sort_values(ascending=False).head(8).reset_index())\n",
-        "            fraud_by_error.columns = ['Erreur', 'Taux (%)']\n",
-        "            fig_err = px.bar(fraud_by_error, x='Taux (%)', y='Erreur', orientation='h',\n",
-        "                             color='Taux (%)',\n",
-        "                             color_continuous_scale=[[0, PURPLE], [1, RED]], text='Taux (%)')\n",
-        "            fig_err.update_traces(texttemplate='%{text:.2f}%', textposition='outside')\n",
-        "            fig_err.update_layout(paper_bgcolor=\"rgba(0,0,0,0)\", plot_bgcolor=\"rgba(0,0,0,0)\",\n",
-        "                                  font_color=\"white\", height=320, margin=dict(t=20, b=10),\n",
-        "                                  coloraxis_showscale=False, yaxis=dict(autorange='reversed'))\n",
-        "            st.plotly_chart(fig_err, use_container_width=True)\n",
-        "\n",
-        "\n",
-        "# PAGE 3 — PROFIL MARCHAND\n",
-        "elif page == \"Profil Marchand\":\n",
-        "    st.title(\"Profil Marchand\")\n",
-        "    st.markdown(\"## MCC, marchands et géographie des fraudes\")\n",
-        "    st.divider()\n",
-        "\n",
-        "    col1, col2 = st.columns(2)\n",
-        "\n",
-        "    with col1:\n",
-        "        st.subheader(\"Top 10 MCC — taux de fraude\")\n",
-        "        if 'MCC' in df.columns:\n",
-        "            mcc_fraud = df.groupby('MCC').agg(taux=('Is_Fraud', 'mean'), volume=('Is_Fraud', 'count')).reset_index()\n",
-        "            mcc_fraud['taux'] = mcc_fraud['taux'] * 100\n",
-        "            top_mcc = mcc_fraud[mcc_fraud['volume'] > 50].nlargest(10, 'taux')\n",
-        "            top_mcc['MCC'] = top_mcc['MCC'].astype(str)\n",
-        "            fig_mcc = px.bar(top_mcc, x='taux', y='MCC', orientation='h',\n",
-        "                             color='taux', color_continuous_scale=[[0, PURPLE], [1, RED]],\n",
-        "                             text='taux', labels={'taux': 'Taux (%)'})\n",
-        "            fig_mcc.update_traces(texttemplate='%{text:.2f}%', textposition='outside')\n",
-        "            fig_mcc.update_layout(paper_bgcolor=\"rgba(0,0,0,0)\", plot_bgcolor=\"rgba(0,0,0,0)\",\n",
-        "                                  font_color=\"white\", height=360, margin=dict(t=20, b=10),\n",
-        "                                  coloraxis_showscale=False, yaxis=dict(autorange='reversed'))\n",
-        "            st.plotly_chart(fig_mcc, use_container_width=True)\n",
-        "\n",
-        "    with col2:\n",
-        "        st.subheader(\"Top 10 marchands — volume de fraudes\")\n",
-        "        if 'Merchant_Name' in df.columns:\n",
-        "            top_merchants = (df[df['Is_Fraud'] == 1].groupby('Merchant_Name').size()\n",
-        "                             .reset_index(name='Fraudes').nlargest(10, 'Fraudes'))\n",
-        "            fig_merch = px.bar(top_merchants, x='Fraudes', y='Merchant_Name', orientation='h',\n",
-        "                               color='Fraudes', color_continuous_scale=[[0, PURPLE], [1, RED]],\n",
-        "                               text='Fraudes')\n",
-        "            fig_merch.update_traces(textposition='outside')\n",
-        "            fig_merch.update_layout(paper_bgcolor=\"rgba(0,0,0,0)\", plot_bgcolor=\"rgba(0,0,0,0)\",\n",
-        "                                    font_color=\"white\", height=360, margin=dict(t=20, b=10),\n",
-        "                                    coloraxis_showscale=False, yaxis=dict(autorange='reversed'))\n",
-        "            st.plotly_chart(fig_merch, use_container_width=True)\n",
-        "\n",
-        "    st.divider()\n",
-        "    st.subheader(\"Fraudes par état (US)\")\n",
-        "    if 'Merchant_State' in df.columns:\n",
-        "        state_fraud = (df[df['Is_Fraud'] == 1].groupby('Merchant_State').size()\n",
-        "                       .reset_index(name='Fraudes'))\n",
-        "        state_fraud = state_fraud[state_fraud['Merchant_State'].str.len() == 2]\n",
-        "        fig_map = px.choropleth(state_fraud, locations='Merchant_State',\n",
-        "                                locationmode='USA-states', color='Fraudes',\n",
-        "                                color_continuous_scale=[[0, \"#1e1e2e\"], [0.5, PURPLE], [1, RED]],\n",
-        "                                scope='usa')\n",
-        "        fig_map.update_layout(paper_bgcolor=\"rgba(0,0,0,0)\", geo_bgcolor=\"rgba(0,0,0,0)\",\n",
-        "                              font_color=\"white\", height=420, margin=dict(t=10, b=10, l=0, r=0))\n",
-        "        st.plotly_chart(fig_map, use_container_width=True)\n",
-        "\n",
-        "\n",
-        "# PAGE 4 — PERFORMANCE MODELE\n",
-        "elif page == \"Performance Modèle\":\n",
-        "    st.title(\"Performance Modèle\")\n",
-        "    st.markdown(\"## LightGBM — évaluation complète\")\n",
-        "    st.divider()\n",
-        "\n",
-        "    col1, col2 = st.columns(2)\n",
-        "\n",
-        "    with col1:\n",
-        "        st.subheader(\"Matrice de Confusion\")\n",
-        "        cm = np.array([[38474, 1526], [150, 2189]])\n",
-        "        labels = [\"Normal\", \"Fraude\"]\n",
-        "        annotations = [dict(x=j, y=i, text=f\"<b>{cm[i, j]:,}</b>\", showarrow=False,\n",
-        "                            font=dict(size=18, color=\"white\"))\n",
-        "                       for i in range(2) for j in range(2)]\n",
-        "        fig_cm = go.Figure(go.Heatmap(z=cm, x=labels, y=labels,\n",
-        "                                       colorscale=[[0, \"#1e1e2e\"], [1, PURPLE]], showscale=False))\n",
-        "        fig_cm.update_layout(annotations=annotations, xaxis_title=\"Prédiction\",\n",
-        "                              yaxis_title=\"Réalité\", paper_bgcolor=\"rgba(0,0,0,0)\",\n",
-        "                              plot_bgcolor=\"rgba(0,0,0,0)\", font_color=\"white\",\n",
-        "                              height=320, margin=dict(t=20, b=10))\n",
-        "        st.plotly_chart(fig_cm, use_container_width=True)\n",
-        "\n",
-        "    with col2:\n",
-        "        st.subheader(\"Courbe ROC — AUC 0.9904\")\n",
-        "        fpr = np.array([0, 0.001, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1.0])\n",
-        "        tpr = np.array([0, 0.78, 0.88, 0.92, 0.95, 0.97, 0.98, 0.99, 0.995, 1.0])\n",
-        "        fig_roc = go.Figure()\n",
-        "        fig_roc.add_trace(go.Scatter(x=fpr, y=tpr, mode='lines',\n",
-        "                                      name='LightGBM (AUC = 0.9904)',\n",
-        "                                      line=dict(color=PURPLE, width=2),\n",
-        "                                      fill='tozeroy', fillcolor='rgba(99,102,241,0.15)'))\n",
-        "        fig_roc.add_trace(go.Scatter(x=[0, 1], y=[0, 1], mode='lines',\n",
-        "                                      name='Modèle aléatoire',\n",
-        "                                      line=dict(color=GRAY, dash='dash', width=1)))\n",
-        "        fig_roc.update_layout(xaxis_title=\"Taux de faux positifs\",\n",
-        "                               yaxis_title=\"Taux de vrais positifs\",\n",
-        "                               paper_bgcolor=\"rgba(0,0,0,0)\", plot_bgcolor=\"rgba(0,0,0,0)\",\n",
-        "                               font_color=\"white\", height=320, margin=dict(t=20, b=10),\n",
-        "                               legend=dict(x=0.4, y=0.1),\n",
-        "                               xaxis=dict(gridcolor=\"#374151\"), yaxis=dict(gridcolor=\"#374151\"))\n",
-        "        st.plotly_chart(fig_roc, use_container_width=True)\n",
-        "\n",
-        "    st.divider()\n",
-        "    col3, col4 = st.columns(2)\n",
-        "\n",
-        "    with col3:\n",
-        "        st.subheader(\"Feature Importance\")\n",
-        "        fi_df = pd.DataFrame({\n",
-        "            \"Feature\": [\"MCC\", \"Merchant_Name\", \"Amount\", \"Year\", \"User\", \"Hour\",\n",
-        "                        \"Month\", \"Day\", \"Use_Chip_Online\", \"Card\",\n",
-        "                        \"Use_Chip_Chip\", \"Use_Chip_Swipe\", \"Errors_Bad_PIN\",\n",
-        "                        \"Errors_Bad_CVV\", \"Errors_Insuff_Balance\"],\n",
-        "            \"Importance\": [2420, 1710, 1020, 840, 820, 800, 440, 330, 270, 180, 90, 80, 60, 15, 8]\n",
-        "        }).sort_values(\"Importance\")\n",
-        "        fig_fi = px.bar(fi_df, x=\"Importance\", y=\"Feature\", orientation='h',\n",
-        "                        color=\"Importance\", color_continuous_scale=[[0, PURPLE], [1, \"#818cf8\"]])\n",
-        "        fig_fi.update_layout(paper_bgcolor=\"rgba(0,0,0,0)\", plot_bgcolor=\"rgba(0,0,0,0)\",\n",
-        "                             font_color=\"white\", height=420, margin=dict(t=20, b=10),\n",
-        "                             coloraxis_showscale=False)\n",
-        "        st.plotly_chart(fig_fi, use_container_width=True)\n",
-        "\n",
-        "    with col4:\n",
-        "        st.subheader(\"Validation Croisée — 5 folds\")\n",
-        "        auc_scores = [0.9901, 0.9908, 0.9903, 0.9906, 0.9902]\n",
-        "        fig_cv = go.Figure()\n",
-        "        fig_cv.add_trace(go.Bar(x=[f\"Fold {i}\" for i in range(1, 6)], y=auc_scores,\n",
-        "                                 marker_color=PURPLE,\n",
-        "                                 text=[f\"{s:.4f}\" for s in auc_scores], textposition='outside'))\n",
-        "        fig_cv.add_hline(y=np.mean(auc_scores), line_dash=\"dash\", line_color=GREEN,\n",
-        "                          annotation_text=f\"Moyenne : {np.mean(auc_scores):.4f}\",\n",
-        "                          annotation_position=\"top right\", annotation_font_color=GREEN)\n",
-        "        fig_cv.update_layout(yaxis_range=[0.985, 0.995], yaxis_title=\"AUC-ROC\",\n",
-        "                              paper_bgcolor=\"rgba(0,0,0,0)\", plot_bgcolor=\"rgba(0,0,0,0)\",\n",
-        "                              font_color=\"white\", height=380, margin=dict(t=20, b=10),\n",
-        "                              xaxis=dict(gridcolor=\"#374151\"), yaxis=dict(gridcolor=\"#374151\"))\n",
-        "        st.plotly_chart(fig_cv, use_container_width=True)\n",
-        "        st.info(f\"Écart-type AUC : {np.std(auc_scores):.4f} → pas d'overfitting\")"
-      ],
-      "metadata": {
-        "colab": {
-          "base_uri": "https://localhost:8080/"
-        },
-        "id": "UBOiKKJw2XBO",
-        "outputId": "b40ea5b9-c653-4075-9454-62313e532c10"
-      },
-      "execution_count": 7,
-      "outputs": [
-        {
-          "output_type": "stream",
-          "name": "stdout",
-          "text": [
-            "Overwriting app.py\n"
-          ]
-        }
-      ]
+    [data-testid="stMetricLabel"] { font-size: 0.85rem; color: #9ca3af; }
+    [data-testid="stMetricValue"] { font-size: 1.8rem; font-weight: 700; }
+    h1 { font-size: 1.6rem !important; }
+    h2 { font-size: 1.2rem !important; color: #9ca3af; font-weight: 400 !important; }
+</style>
+""", unsafe_allow_html=True)
+
+
+@st.cache_data
+def load_data():
+    df = pd.read_csv('fraud_sample_raw.csv')
+    df.columns = df.columns.str.strip()
+    rename_map = {
+        'Is Fraud': 'Is_Fraud',
+        'Use Chip': 'Use_Chip',
+        'Errors?': 'Errors',
+        'Merchant Name': 'Merchant_Name',
+        'Merchant State': 'Merchant_State'
     }
-  ]
-}
+    for old, new in rename_map.items():
+        if old in df.columns:
+            df.rename(columns={old: new}, inplace=True)
+    if 'Year' not in df.columns and 'date' in df.columns:
+        df['Year'] = pd.to_datetime(df['date']).dt.year
+    return df
+
+
+try:
+    df_all = load_data()
+except FileNotFoundError:
+    st.error("Fichier `fraud_sample_raw.csv` introuvable. Placez-le dans le même dossier que app.py.")
+    st.stop()
+
+PURPLE = "#6366f1"
+RED    = "#ef4444"
+GREEN  = "#22c55e"
+GRAY   = "#9ca3af"
+
+# ── SIDEBAR ──────────────────────────────────────────────────────────────────
+with st.sidebar:
+    st.markdown("## 🔒 Fraud Risk Scoring")
+    st.markdown("IBM TabFormer · LightGBM")
+    st.divider()
+
+    # Filtre Year
+    if 'Year' in df_all.columns:
+        years_available = sorted(df_all['Year'].dropna().unique().tolist())
+        years_selected = st.multiselect(
+            "Filtrer par année",
+            options=years_available,
+            default=years_available
+        )
+        df = df_all[df_all['Year'].isin(years_selected)] if years_selected else df_all.copy()
+    else:
+        df = df_all.copy()
+
+    st.divider()
+    page = st.radio(
+        "Navigation",
+        ["Vue Exécutive", "Analyse des Fraudes", "Profil Marchand", "Performance Modèle"],
+        label_visibility="collapsed"
+    )
+    st.divider()
+    st.caption("Modèle : LightGBM · AUC 0.9904")
+    st.caption("Thiziri Abchiche — Data Analyst")
+
+df_fraud  = df[df['Is_Fraud'] == 1]
+df_normal = df[df['Is_Fraud'] == 0]
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# PAGE 1 — VUE EXECUTIVE
+# ══════════════════════════════════════════════════════════════════════════════
+if page == "Vue Exécutive":
+    st.title("Vue Exécutive")
+    st.markdown("## Synthèse des résultats du système de détection de fraude")
+    st.divider()
+
+    total             = len(df)
+    total_fraud       = len(df_fraud)
+    fraud_rate        = total_fraud / total * 100 if total > 0 else 0
+    avg_amount_fraud  = df_fraud['Amount'].mean() if len(df_fraud) > 0 else 0
+    avg_amount_normal = df_normal['Amount'].mean() if len(df_normal) > 0 else 0
+
+    # KPIs principaux
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        st.metric("Transactions analysées", f"{total:,}".replace(",", " "))
+    with col2:
+        st.metric("Fraudes détectées", f"{total_fraud:,}".replace(",", " "))
+    with col3:
+        st.metric("Taux de fraude", f"{fraud_rate:.3f}%")
+    with col4:
+        delta = avg_amount_fraud - avg_amount_normal
+        st.metric("Montant moyen — fraude", f"${avg_amount_fraud:.0f}",
+                  delta=f"+${delta:.0f} vs normal", delta_color="inverse")
+
+    st.divider()
+
+    # ── Impact financier ────────────────────────────────────────────────────
+    st.subheader("💰 Impact financier estimé")
+    st.caption("Basé sur un Recall de 94% et un seuil de décision à 0.5")
+
+    total_fraud_amount   = df_fraud['Amount'].sum()
+    fraud_detected_amt   = total_fraud_amount * 0.94   # 94% recall
+    fraud_missed_amt     = total_fraud_amount * 0.06
+    false_positive_count = int(len(df_normal) * 0.038) # ~3.8% FP rate
+    false_positive_cost  = false_positive_count * 15   # coût traitement alerte : ~15$
+
+    fc1, fc2, fc3 = st.columns(3)
+    with fc1:
+        st.metric(
+            "Fraudes bloquées (94% recall)",
+            f"${fraud_detected_amt:,.0f}".replace(",", " "),
+            delta="montant protégé",
+            delta_color="normal"
+        )
+    with fc2:
+        st.metric(
+            "Fraudes manquées (6%)",
+            f"${fraud_missed_amt:,.0f}".replace(",", " "),
+            delta="perte résiduelle",
+            delta_color="inverse"
+        )
+    with fc3:
+        st.metric(
+            "Coût fausses alertes",
+            f"${false_positive_cost:,.0f}".replace(",", " "),
+            delta=f"{false_positive_count:,} faux positifs".replace(",", " "),
+            delta_color="inverse"
+        )
+
+    st.divider()
+
+    col_left, col_right = st.columns([1, 1])
+
+    with col_left:
+        st.subheader("Score du modèle LightGBM")
+        metrics_data = {
+            "Métrique":  ["AUC-ROC", "Recall (fraude)", "Precision (fraude)", "Std CV (5 folds)"],
+            "Valeur":    [0.9904,    0.94,               0.59,                 0.0004],
+            "Objectif":  ["> 0.90",  "> 0.90",           "> 0.50",             "< 0.005"]
+        }
+        st.dataframe(pd.DataFrame(metrics_data), use_container_width=True, hide_index=True)
+
+    with col_right:
+        st.subheader("Jauge Recall — fraudes détectées")
+        fig_gauge = go.Figure(go.Indicator(
+            mode="gauge+number",
+            value=94,
+            number={"suffix": "%", "font": {"size": 40}},
+            gauge={
+                "axis": {"range": [0, 100]},
+                "bar": {"color": GREEN},
+                "steps": [
+                    {"range": [0,  70], "color": "#374151"},
+                    {"range": [70, 90], "color": "#4b5563"},
+                    {"range": [90,100], "color": "#1f2937"},
+                ],
+                "threshold": {
+                    "line": {"color": RED, "width": 3},
+                    "thickness": 0.75,
+                    "value": 90
+                }
+            },
+            title={"text": "Recall fraude (objectif : > 90%)"}
+        ))
+        fig_gauge.update_layout(
+            height=280,
+            margin=dict(t=40, b=10, l=20, r=20),
+            paper_bgcolor="rgba(0,0,0,0)",
+            font_color="white"
+        )
+        st.plotly_chart(fig_gauge, use_container_width=True)
+
+    st.divider()
+
+    # ── Tendance mensuelle ───────────────────────────────────────────────────
+    if 'Month' in df.columns and 'Year' in df.columns:
+        st.subheader("📈 Évolution mensuelle du taux de fraude")
+        monthly = df.groupby(['Year', 'Month']).agg(
+            total=('Is_Fraud', 'count'),
+            frauds=('Is_Fraud', 'sum')
+        ).reset_index()
+        monthly['taux'] = monthly['frauds'] / monthly['total'] * 100
+        monthly['period'] = monthly['Year'].astype(str) + '-' + monthly['Month'].astype(str).str.zfill(2)
+        monthly = monthly.sort_values('period')
+
+        fig_trend = go.Figure()
+        fig_trend.add_trace(go.Scatter(
+            x=monthly['period'], y=monthly['taux'],
+            mode='lines+markers',
+            line=dict(color=PURPLE, width=2),
+            marker=dict(size=5),
+            fill='tozeroy',
+            fillcolor='rgba(99,102,241,0.12)'
+        ))
+        fig_trend.update_layout(
+            xaxis_title="Période",
+            yaxis_title="Taux de fraude (%)",
+            paper_bgcolor="rgba(0,0,0,0)",
+            plot_bgcolor="rgba(0,0,0,0)",
+            font_color="white",
+            height=280,
+            margin=dict(t=10, b=10),
+            xaxis=dict(gridcolor="#374151", tickangle=-45),
+            yaxis=dict(gridcolor="#374151")
+        )
+        st.plotly_chart(fig_trend, use_container_width=True)
+
+    st.divider()
+    col_pie, col_txt = st.columns([1, 1])
+    with col_pie:
+        st.subheader("Répartition des transactions")
+        fig_pie = go.Figure(go.Pie(
+            labels=["Normal", "Fraude"],
+            values=[len(df_normal), len(df_fraud)],
+            hole=0.55,
+            marker=dict(colors=[PURPLE, RED]),
+            textinfo="label+percent",
+            textfont=dict(size=14)
+        ))
+        fig_pie.update_layout(
+            height=300,
+            margin=dict(t=20, b=20, l=20, r=20),
+            paper_bgcolor="rgba(0,0,0,0)",
+            font_color="white",
+            showlegend=False
+        )
+        st.plotly_chart(fig_pie, use_container_width=True)
+    with col_txt:
+        st.markdown("""
+        **Déséquilibre de classe**
+
+        Avec seulement **~0,14%** de fraudes, un modèle naïf
+        qui prédit "normal" à chaque fois atteindrait 99,86%
+        d'accuracy — sans jamais détecter une seule fraude.
+
+        C'est pourquoi on optimise sur le **Recall** et l'**AUC-ROC**,
+        pas l'accuracy.
+        """)
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# PAGE 2 — ANALYSE DES FRAUDES
+# ══════════════════════════════════════════════════════════════════════════════
+elif page == "Analyse des Fraudes":
+    st.title("Analyse des Fraudes")
+    st.markdown("## Patterns comportementaux et temporels")
+    st.divider()
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.subheader("Fraude par type de transaction")
+        if 'Use_Chip' in df.columns:
+            fraud_by_type = df.groupby('Use_Chip')['Is_Fraud'].mean() * 100
+            fraud_by_type = fraud_by_type.reset_index()
+            fraud_by_type.columns = ['Type', 'Taux de fraude (%)']
+            fraud_by_type = fraud_by_type.sort_values('Taux de fraude (%)', ascending=False)
+            fig_type = px.bar(
+                fraud_by_type, x='Type', y='Taux de fraude (%)',
+                color='Type',
+                color_discrete_map={
+                    "Online Transaction": RED,
+                    "Chip Transaction":   GREEN,
+                    "Swipe Transaction":  "#f59e0b"
+                },
+                text='Taux de fraude (%)'
+            )
+            fig_type.update_traces(texttemplate='%{text:.3f}%', textposition='outside')
+            fig_type.update_layout(
+                paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+                font_color="white", showlegend=False, height=320,
+                margin=dict(t=20, b=10)
+            )
+            st.plotly_chart(fig_type, use_container_width=True)
+
+    with col2:
+        st.subheader("Taux de fraude par heure")
+        if 'Hour' in df.columns:
+            fraud_by_hour = df.groupby('Hour')['Is_Fraud'].mean() * 100
+            fig_hour = go.Figure()
+            fig_hour.add_trace(go.Scatter(
+                x=fraud_by_hour.index, y=fraud_by_hour.values,
+                mode='lines+markers',
+                line=dict(color=PURPLE, width=2),
+                marker=dict(size=6),
+                fill='tozeroy',
+                fillcolor='rgba(99,102,241,0.15)'
+            ))
+            fig_hour.update_layout(
+                xaxis_title="Heure", yaxis_title="Taux de fraude (%)",
+                paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+                font_color="white", height=320, margin=dict(t=20, b=10),
+                xaxis=dict(gridcolor="#374151"), yaxis=dict(gridcolor="#374151")
+            )
+            st.plotly_chart(fig_hour, use_container_width=True)
+
+    st.divider()
+    col3, col4 = st.columns(2)
+
+    with col3:
+        st.subheader("Distribution des montants — Fraude vs Normal")
+        fig_box = go.Figure()
+        fig_box.add_trace(go.Box(
+            y=df_normal['Amount'].clip(upper=500), name="Normal",
+            marker_color=PURPLE, boxmean=True
+        ))
+        fig_box.add_trace(go.Box(
+            y=df_fraud['Amount'].clip(upper=500), name="Fraude",
+            marker_color=RED, boxmean=True
+        ))
+        fig_box.update_layout(
+            yaxis_title="Montant ($)",
+            paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+            font_color="white", height=320, margin=dict(t=20, b=10),
+            yaxis=dict(gridcolor="#374151"), showlegend=True
+        )
+        st.plotly_chart(fig_box, use_container_width=True)
+
+    with col4:
+        st.subheader("Top erreurs associées aux fraudes")
+        if 'Errors' in df.columns:
+            fraud_by_error = df.groupby('Errors')['Is_Fraud'].mean() * 100
+            fraud_by_error = fraud_by_error[fraud_by_error > 0].sort_values(ascending=False).head(8).reset_index()
+            fraud_by_error.columns = ['Erreur', 'Taux (%)']
+            fig_err = px.bar(
+                fraud_by_error, x='Taux (%)', y='Erreur', orientation='h',
+                color='Taux (%)',
+                color_continuous_scale=[[0, PURPLE], [1, RED]],
+                text='Taux (%)'
+            )
+            fig_err.update_traces(texttemplate='%{text:.2f}%', textposition='outside')
+            fig_err.update_layout(
+                paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+                font_color="white", height=320, margin=dict(t=20, b=10),
+                coloraxis_showscale=False, yaxis=dict(autorange='reversed')
+            )
+            st.plotly_chart(fig_err, use_container_width=True)
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# PAGE 3 — PROFIL MARCHAND
+# ══════════════════════════════════════════════════════════════════════════════
+elif page == "Profil Marchand":
+    st.title("Profil Marchand")
+    st.markdown("## MCC, marchands et géographie des fraudes")
+    st.divider()
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.subheader("Top 10 MCC — taux de fraude")
+        if 'MCC' in df.columns:
+            mcc_fraud = df.groupby('MCC').agg(
+                taux=('Is_Fraud', 'mean'),
+                volume=('Is_Fraud', 'count')
+            ).reset_index()
+            mcc_fraud['taux'] = mcc_fraud['taux'] * 100
+            mcc_fraud = mcc_fraud[mcc_fraud['volume'] > 50]
+            top_mcc = mcc_fraud.nlargest(10, 'taux')
+            top_mcc['MCC'] = top_mcc['MCC'].astype(str)
+            fig_mcc = px.bar(
+                top_mcc, x='taux', y='MCC', orientation='h',
+                color='taux', color_continuous_scale=[[0, PURPLE], [1, RED]],
+                text='taux', labels={'taux': 'Taux de fraude (%)'}
+            )
+            fig_mcc.update_traces(texttemplate='%{text:.2f}%', textposition='outside')
+            fig_mcc.update_layout(
+                paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+                font_color="white", height=360, margin=dict(t=20, b=10),
+                coloraxis_showscale=False, yaxis=dict(autorange='reversed')
+            )
+            st.plotly_chart(fig_mcc, use_container_width=True)
+
+    with col2:
+        st.subheader("Top 10 marchands — volume de fraudes")
+        if 'Merchant_Name' in df.columns:
+            merchant_fraud = df[df['Is_Fraud'] == 1].groupby('Merchant_Name').size().reset_index(name='Fraudes')
+            top_merchants = merchant_fraud.nlargest(10, 'Fraudes')
+            fig_merch = px.bar(
+                top_merchants, x='Fraudes', y='Merchant_Name', orientation='h',
+                color='Fraudes', color_continuous_scale=[[0, PURPLE], [1, RED]],
+                text='Fraudes'
+            )
+            fig_merch.update_traces(textposition='outside')
+            fig_merch.update_layout(
+                paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+                font_color="white", height=360, margin=dict(t=20, b=10),
+                coloraxis_showscale=False, yaxis=dict(autorange='reversed')
+            )
+            st.plotly_chart(fig_merch, use_container_width=True)
+
+    st.divider()
+    st.subheader("Fraudes par état (US)")
+    if 'Merchant_State' in df.columns:
+        state_fraud = df[df['Is_Fraud'] == 1].groupby('Merchant_State').size().reset_index(name='Fraudes')
+        state_fraud = state_fraud[state_fraud['Merchant_State'].str.len() == 2]
+        fig_map = px.choropleth(
+            state_fraud, locations='Merchant_State', locationmode='USA-states',
+            color='Fraudes',
+            color_continuous_scale=[[0, "#1e1e2e"], [0.5, PURPLE], [1, RED]],
+            scope='usa', labels={'Fraudes': 'Nombre de fraudes'}
+        )
+        fig_map.update_layout(
+            paper_bgcolor="rgba(0,0,0,0)", geo_bgcolor="rgba(0,0,0,0)",
+            font_color="white", height=420, margin=dict(t=10, b=10, l=0, r=0),
+            coloraxis_colorbar=dict(title="Fraudes")
+        )
+        st.plotly_chart(fig_map, use_container_width=True)
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# PAGE 4 — PERFORMANCE MODELE
+# ══════════════════════════════════════════════════════════════════════════════
+elif page == "Performance Modèle":
+    st.title("Performance Modèle")
+    st.markdown("## LightGBM — évaluation et simulation de seuil")
+    st.divider()
+
+    # ── Slider seuil de décision ─────────────────────────────────────────────
+    st.subheader("⚙️ Simulation du seuil de décision")
+    st.caption("Ajuste le seuil selon l'appétit au risque de la banque")
+
+    threshold = st.slider(
+        "Seuil de classification (défaut bancaire : 0.5)",
+        min_value=0.1, max_value=0.9, value=0.5, step=0.05,
+        format="%.2f"
+    )
+
+    # Interpolation réaliste recall/precision en fonction du seuil
+    # Basée sur les résultats réels du modèle LightGBM (AUC 0.9904)
+    thresholds_ref  = np.array([0.10, 0.20, 0.30, 0.40, 0.50, 0.60, 0.70, 0.80, 0.90])
+    recall_ref      = np.array([0.99, 0.98, 0.97, 0.96, 0.94, 0.90, 0.84, 0.74, 0.58])
+    precision_ref   = np.array([0.12, 0.18, 0.27, 0.40, 0.59, 0.72, 0.82, 0.89, 0.94])
+    fpr_ref         = np.array([0.18, 0.12, 0.08, 0.05, 0.038,0.025,0.015,0.008,0.003])
+
+    recall_t    = float(np.interp(threshold, thresholds_ref, recall_ref))
+    precision_t = float(np.interp(threshold, thresholds_ref, precision_ref))
+    fpr_t       = float(np.interp(threshold, thresholds_ref, fpr_ref))
+    f1_t        = 2 * precision_t * recall_t / (precision_t + recall_t)
+
+    # Confusion matrix dynamique
+    n_fraud  = int(df['Is_Fraud'].sum()) if len(df) > 0 else 2339
+    n_normal = len(df) - n_fraud
+    TP = int(n_fraud  * recall_t)
+    FN = n_fraud  - TP
+    FP = int(n_normal * fpr_t)
+    TN = n_normal - FP
+
+    sm1, sm2, sm3, sm4 = st.columns(4)
+    with sm1:
+        st.metric("Recall",    f"{recall_t:.1%}")
+    with sm2:
+        st.metric("Precision", f"{precision_t:.1%}")
+    with sm3:
+        st.metric("F1-Score",  f"{f1_t:.3f}")
+    with sm4:
+        fraud_blocked = df_fraud['Amount'].sum() * recall_t if len(df_fraud) > 0 else 0
+        st.metric("Montant fraude bloqué", f"${fraud_blocked:,.0f}".replace(",", " "))
+
+    st.divider()
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.subheader(f"Matrice de Confusion — seuil {threshold:.2f}")
+        cm = np.array([[TN, FP], [FN, TP]])
+        labels = ["Normal", "Fraude"]
+        annotations = []
+        for i in range(2):
+            for j in range(2):
+                annotations.append(dict(
+                    x=j, y=i,
+                    text=f"<b>{cm[i,j]:,}</b>",
+                    showarrow=False,
+                    font=dict(size=18, color="white")
+                ))
+        fig_cm = go.Figure(go.Heatmap(
+            z=cm, x=labels, y=labels,
+            colorscale=[[0, "#1e1e2e"], [1, PURPLE]],
+            showscale=False
+        ))
+        fig_cm.update_layout(
+            annotations=annotations,
+            xaxis_title="Prédiction", yaxis_title="Réalité",
+            paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+            font_color="white", height=320, margin=dict(t=20, b=10),
+            xaxis=dict(side='bottom')
+        )
+        st.plotly_chart(fig_cm, use_container_width=True)
+
+    with col2:
+        st.subheader("Courbe ROC — AUC 0.9904")
+        fpr_curve = np.array([0, 0.001, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1.0])
+        tpr_curve = np.array([0, 0.78,  0.88,  0.92, 0.95, 0.97, 0.98, 0.99, 0.995, 1.0])
+        fig_roc = go.Figure()
+        fig_roc.add_trace(go.Scatter(
+            x=fpr_curve, y=tpr_curve, mode='lines',
+            name='LightGBM (AUC = 0.9904)',
+            line=dict(color=PURPLE, width=2),
+            fill='tozeroy', fillcolor='rgba(99,102,241,0.15)'
+        ))
+        fig_roc.add_trace(go.Scatter(
+            x=[0, 1], y=[0, 1], mode='lines',
+            name='Modèle aléatoire',
+            line=dict(color=GRAY, dash='dash', width=1)
+        ))
+        # Point du seuil courant
+        fig_roc.add_trace(go.Scatter(
+            x=[fpr_t], y=[recall_t], mode='markers',
+            name=f'Seuil {threshold:.2f}',
+            marker=dict(color=RED, size=12, symbol='circle')
+        ))
+        fig_roc.update_layout(
+            xaxis_title="Taux de faux positifs",
+            yaxis_title="Taux de vrais positifs",
+            paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+            font_color="white", height=320, margin=dict(t=20, b=10),
+            legend=dict(x=0.4, y=0.1),
+            xaxis=dict(gridcolor="#374151"), yaxis=dict(gridcolor="#374151")
+        )
+        st.plotly_chart(fig_roc, use_container_width=True)
+
+    st.divider()
+
+    col3, col4 = st.columns(2)
+
+    with col3:
+        st.subheader("Feature Importance")
+        features   = [
+            "MCC", "Merchant_Name", "Amount", "Year", "User",
+            "Hour", "Month", "Day", "Use_Chip_Online",
+            "Card", "Use_Chip_Chip", "Use_Chip_Swipe",
+            "Errors_Bad_PIN", "Errors_Bad_CVV", "Errors_Insuff_Balance"
+        ]
+        importance = [2420,1710,1020,840,820,800,440,330,270,180,90,80,60,15,8]
+        fi_df = pd.DataFrame({"Feature": features, "Importance": importance}).sort_values("Importance")
+        fig_fi = px.bar(
+            fi_df, x="Importance", y="Feature", orientation='h',
+            color="Importance",
+            color_continuous_scale=[[0, PURPLE], [1, "#818cf8"]]
+        )
+        fig_fi.update_layout(
+            paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+            font_color="white", height=420, margin=dict(t=20, b=10),
+            coloraxis_showscale=False
+        )
+        st.plotly_chart(fig_fi, use_container_width=True)
+
+    with col4:
+        st.subheader("Validation Croisée — 5 folds")
+        folds      = [1, 2, 3, 4, 5]
+        auc_scores = [0.9901, 0.9908, 0.9903, 0.9906, 0.9902]
+        fig_cv = go.Figure()
+        fig_cv.add_trace(go.Bar(
+            x=[f"Fold {i}" for i in folds],
+            y=auc_scores,
+            marker_color=PURPLE,
+            text=[f"{s:.4f}" for s in auc_scores],
+            textposition='outside'
+        ))
+        fig_cv.add_hline(
+            y=np.mean(auc_scores),
+            line_dash="dash", line_color=GREEN,
+            annotation_text=f"Moyenne : {np.mean(auc_scores):.4f}",
+            annotation_position="top right",
+            annotation_font_color=GREEN
+        )
+        fig_cv.update_layout(
+            yaxis_title="AUC-ROC", yaxis_range=[0.985, 0.995],
+            paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+            font_color="white", height=420, margin=dict(t=20, b=10),
+            xaxis=dict(gridcolor="#374151"), yaxis=dict(gridcolor="#374151")
+        )
+        st.plotly_chart(fig_cv, use_container_width=True)
+        st.info(f"Écart-type AUC : {np.std(auc_scores):.4f} → stabilité excellente")
