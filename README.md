@@ -1,5 +1,4 @@
 # Fraud Risk Scoring System
-
 Détection de fraude bancaire par scoring ML — IBM TabFormer Dataset
 
 ---
@@ -8,7 +7,7 @@ Détection de fraude bancaire par scoring ML — IBM TabFormer Dataset
 
 Ce projet construit un système de scoring de risque de fraude sur des transactions bancaires réelles synthétiques. L'objectif : identifier automatiquement les transactions frauduleuses parmi des millions d'opérations, en s'appuyant sur des modèles de Machine Learning utilisés en production dans le secteur financier.
 
-**Stack** : Python · pandas · LightGBM · XGBoost · scikit-learn · Matplotlib · Seaborn
+**Stack** : Python · pandas · LightGBM · XGBoost · scikit-learn · FastAPI · Matplotlib · Seaborn
 
 ---
 
@@ -85,6 +84,47 @@ Les variables les plus prédictives selon LightGBM :
 4. **Year / Hour** — dimension temporelle importante
 
 Insight métier : le **profil du marchand** est plus prédictif que le comportement de l'utilisateur.
+
+### 6. Pipeline ML & API
+
+Le modèle entraîné est industrialisé via un pipeline sklearn et exposé en API REST avec FastAPI.
+
+**Pipeline** : le preprocessing, le feature engineering et l'encodage sont enchaînés dans un objet sklearn `Pipeline` — un CSV brut en entrée suffit pour reproduire l'intégralité du processus sans intervention manuelle.
+
+**API FastAPI** : le modèle est accessible via une route `/predict` qui accepte une transaction en JSON et retourne un score de risque et une décision en temps réel.
+
+```bash
+# Lancer l'API localement
+cd api
+pip install -r requirements.txt
+uvicorn main:app --reload
+```
+
+Exemple de requête :
+
+```json
+{
+  "Amount": 250.0,
+  "Hour": 11,
+  "Year": 2019,
+  "Month": 6,
+  "Day": 15,
+  "Use_Chip": "Online Transaction",
+  "Errors": ""
+}
+```
+
+Réponse :
+
+```json
+{
+  "score_risque": 0.0121,
+  "decision": "NORMAL",
+  "seuil": 0.5
+}
+```
+
+La documentation interactive est disponible sur `http://127.0.0.1:8000/docs`.
 
 ---
 
